@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}BugLens — Automated Bug Report Classification{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-wrapper">
+        <div class="brand-logo">BL</div>
+        <div class="brand-titles">
+          <h1>BugLens</h1>
+          <p>Automated Bug Report Classification using Agentic AI</p>
+        </div>
+      </div>
+
+      <nav class="main-nav" aria-label="Main Navigation">
+        <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">Dashboard</a>
+        <a href="/analyze" class="nav-link {% if request.path == '/analyze' %}active{% endif %}">+ New Analysis</a>
+        <a href="/history" class="nav-link {% if request.path == '/history' %}active{% endif %}">History</a>
+        <a href="/about" class="nav-link {% if request.path == '/about' %}active{% endif %}">About</a>
+      </nav>
+
+      <div class="header-meta">
+        <span id="system-status-pill" class="status-pill" title="Backend connection status">
+          <span class="status-dot active"></span>
+          <span id="status-label">Ready</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Body -->
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div style="max-width: var(--container-max); margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+      <span>BugLens &copy; Agentic AI Systems &middot; Multi-Agent Software Triage</span>
+      <span>Powered by Groq LLM &amp; Tavily Research</span>
+    </div>
+  </footer>
+
+  <!-- Accessible Confirmation Modal -->
+  <div id="app-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-title" class="modal-title">Confirm Action</h3>
+      </div>
+      <div id="modal-body" class="modal-body">Are you sure?</div>
+      <div class="modal-actions">
+        <button id="modal-cancel-btn" class="btn btn-secondary">Cancel</button>
+        <button id="modal-confirm-btn" class="btn btn-danger">Confirm Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Core Scripts -->
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/ui.js"></script>
+  <script>
+    // Fetch live system health on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const health = await API.getHealth();
+        const statusLabel = document.getElementById('status-label');
+        const statusPill = document.getElementById('system-status-pill');
+        if (health.demo_mode) {
+          statusLabel.textContent = 'Demo Mode';
+          statusPill.innerHTML = '<span class="status-dot demo"></span> Demo Mode';
+        } else if (health.groq_configured) {
+          statusLabel.textContent = 'Groq Online';
+          statusPill.innerHTML = '<span class="status-dot active"></span> Groq Online';
+        }
+      } catch (e) {
+        console.warn('Health check failed:', e);
+      }
+    });
+  </script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

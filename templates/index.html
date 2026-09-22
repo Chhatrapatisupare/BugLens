@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — BugLens{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">Triage Operations Dashboard</h2>
+    <p style="font-size: 0.88rem; color: var(--text-muted);">Overview of classified software defects, severity profiles, and system health.</p>
+  </div>
+  <div>
+    <a href="/analyze" class="btn btn-primary">
+      <span>+</span> New Bug Analysis
+    </a>
+  </div>
+</div>
+
+<!-- 4 KPI Metric Cards -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <span class="metric-label">Total Analyses</span>
+    <div id="metric-total" class="metric-value">--</div>
+    <span class="metric-subtext">Processed bug reports</span>
+  </div>
+
+  <div class="metric-card">
+    <span class="metric-label">Critical Severity</span>
+    <div id="metric-critical" class="metric-value" style="color: var(--danger);">--</div>
+    <span class="metric-subtext">Outages or blocking defects</span>
+  </div>
+
+  <div class="metric-card">
+    <span class="metric-label">High Priority (P0/P1)</span>
+    <div id="metric-high-priority" class="metric-value" style="color: var(--warning);">--</div>
+    <span class="metric-subtext">Urgent sprint fixes</span>
+  </div>
+
+  <div class="metric-card">
+    <span class="metric-label">Most Common Category</span>
+    <div id="metric-common-category" class="metric-value" style="font-size: 1.3rem; line-height: 1.2; word-break: break-word;">--</div>
+    <span class="metric-subtext">Top incident classification</span>
+  </div>
+</div>
+
+<!-- Category Breakdown Section -->
+<div class="card" style="margin-bottom: 1.5rem;">
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">Category Distribution</h3>
+      <p class="card-subtitle">Real-time breakdown of issues across standard defect categories</p>
+    </div>
+  </div>
+  <div id="category-pills-container" class="tag-list">
+    <span style="color: var(--text-muted); font-size: 0.85rem;">Loading distribution metrics...</span>
+  </div>
+</div>
+
+<!-- Zero State (shown when DB is empty) -->
+<div id="zero-state-container" class="card" style="display: none; text-align: center; padding: 3rem 1.5rem;">
+  <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">📋</div>
+  <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">No analyses yet</h3>
+  <p style="font-size: 0.9rem; color: var(--text-muted); max-width: 480px; margin: 0 auto 1.5rem;">
+    Submit your first software bug report or load a pre-configured sample to trigger the multi-agent classification pipeline.
+  </p>
+  <a href="/analyze" class="btn btn-primary">Start First Bug Analysis</a>
+</div>
+
+<!-- Recent Analyses Table -->
+<div id="recent-analyses-card" class="card" style="display: none;">
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">Recent Triage Analyses</h3>
+      <p class="card-subtitle">Latest bug reports evaluated by the agentic pipeline</p>
+    </div>
+    <a href="/history" class="btn btn-secondary btn-sm">View All in History &rarr;</a>
+  </div>
+
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Bug Title &amp; Module</th>
+          <th>Category</th>
+          <th>Severity</th>
+          <th>Priority</th>
+          <th>Confidence</th>
+          <th>Analyzed Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="recent-table-body">
+        <!-- Dynamically injected rows -->
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}

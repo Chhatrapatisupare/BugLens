@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Report #{{ report_id }} — BugLens{% endblock %}
+
+{% block content %}
+{% if not report %}
+<div class="card" style="text-align: center; padding: 3rem 1.5rem;">
+  <h3 style="font-size: 1.25rem; color: var(--danger); margin-bottom: 0.5rem;">Analysis Not Found</h3>
+  <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Could not find an analysis with ID #{{ report_id }}.</p>
+  <a href="/history" class="btn btn-secondary">Back to History</a>
+</div>
+{% else %}
+{% set res = report.result or {} %}
+
+<!-- Page Title & Actions Toolbar -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+  <div>
+    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+      <a href="/history" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.5rem;">&larr; Back to History</a>
+      <span style="font-size: 0.85rem; color: var(--text-muted);">Report #{{ report.id }} &middot; {{ report.created_at }}</span>
+      {% if res.is_demo %}
+      <span class="badge" style="background-color: var(--warning-subtle); color: var(--warning-text); font-size: 0.7rem;">Demo Mode</span>
+      {% endif %}
+    </div>
+    <h2 style="font-size: 1.45rem; font-weight: 700; color: var(--text-primary);">{{ report.title }}</h2>
+  </div>
+
+  <div class="no-print" style="display: flex; align-items: center; gap: 0.5rem;">
+    <button id="export-json-btn" class="btn btn-secondary btn-sm" title="Download raw analysis JSON">
+      📄 Export JSON
+    </button>
+    <button id="export-report-btn" class="btn btn-secondary btn-sm" title="Print or save as PDF">
+      🖨️ Export Report
+    </button>
+    <a href="/analyze" class="btn btn-primary btn-sm">
+      + New Analysis
+    </a>
+  </div>
+</div>
+
+<!-- 4 Key Verdict Badges Banner -->
+<div class="verdict-banner">
+  <div class="verdict-item">
+    <div class="verdict-caption">Category</div>
+    <div style="margin-top: 0.25rem;">
+      <span class="badge badge-category" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+        {{ report.category }}
+      </span>
+    </div>
+  </div>
+
+  <div class="verdict-item">
+    <div class="verdict-caption">Severity Level</div>
+    <div style="margin-top: 0.25rem;">
+      <span class="badge badge-{{ report.severity | lower }}" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+        {{ report.severity }}
+      </span>
+    </div>
+  </div>
+
+  <div class="verdict-item">
+    <div class="verdict-caption">Assigned Priority</div>
+    <div style="margin-top: 0.25rem;">
+      <span class="badge badge-{{ report.priority | lower }}" style="font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+        {{ report.priority }}
+      </span>
+    </div>
+  </div>
+
+  <div class="verdict-item">
+    <div class="verdict-caption">Model Confidence</div>
+    <div style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); line-height: 1.1; margin-top: 0.25rem;">
+      {{ ((report.confidence or 0.85) * 100) | round | int }}%
+    </div>
+  </div>
+</div>
+
+<!-- Probable Root Cause Box -->
+<div class="root-cause-box">
+  <h3>
+    <span>🔍</span> Probable Root Cause Hypothesis
+  </h3>
+  <p>{{ report.root_cause or res.probable_root_cause or 'Under investigation' }}</p>
+</div>
+
+<!-- Two-Column Content Breakdown -->
+<div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;" class="two-column-grid">
+
+  <!-- Left: Recommended Actions & Testing -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Recommended Debugging Actions</h3>
+      </div>
+      {% if res.recommended_actions %}
+      <ol class="action-list">
+        {% for action in res.recommended_actions %}
+        <li>{{ action }}</li>
+        {% endfor %}
+      </ol>
+      {% else %}
+      <p style="color: var(--text-muted); font-size: 0.88rem;">No explicit actions generated.</p>
+      {% endif %}
+    </div>
+
+    <!-- Testing & Prevention Grid -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Testing &amp; Prevention Policies</h3>
+      </div>
+
+      <div style="margin-bottom: 1.25rem;">
+        <h4 style="font-size: 0.88rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem;">Targeted Verification Tests</h4>
+        {% if res.testing_recommendations %}
+        <ul style="padding-left: 1.25rem; font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5;">
+          {% for test in res.testing_recommendations %}
+          <li style="margin-bottom: 0.35rem;">{{ test }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Standard regression tests recommended.</p>
+        {% endif %}
+      </div>
+
+      <div>
+        <h4 style="font-size: 0.88rem; font-weight: 600; color: var(--text-primary); margin-bottom: 0.4rem;">Architectural Safeguards</h4>
+        {% if res.prevention %}
+        <ul style="padding-left: 1.25rem; font-size: 0.86rem; color: var(--text-secondary); line-height: 1.5;">
+          {% for prev in res.prevention %}
+          <li style="margin-bottom: 0.35rem;">{{ prev }}</li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Standard CI/CD code reviews apply.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Extracted Symptoms, Technical Entities & Details -->
+  <div>
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Extracted Symptoms</h3>
+      </div>
+      <div class="tag-list">
+        {% if res.key_symptoms %}
+          {% for s in res.key_symptoms %}
+          <span class="tag">{{ s }}</span>
+          {% endfor %}
+        {% else %}
+          <span class="tag">{{ report.actual_behavior }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Identified Technical Entities</h3>
+      </div>
+      <div class="tag-list">
+        {% if res.technical_entities %}
+          {% for e in res.technical_entities %}
+          <span class="tag" style="background-color: var(--primary-subtle); color: var(--primary); border-color: var(--primary-border);">
+            {{ e }}
+          </span>
+          {% endfor %}
+        {% else %}
+          <span style="color: var(--text-muted); font-size: 0.85rem;">{{ report.environment }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">Environment &amp; Module</h3>
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+        <div style="margin-bottom: 0.5rem;">
+          <strong style="color: var(--text-primary);">Affected Component:</strong> {{ report.component or 'General' }}
+        </div>
+        <div style="margin-bottom: 0.5rem;">
+          <strong style="color: var(--text-primary);">Environment:</strong> {{ report.environment }}
+        </div>
+        {% if report.error_log %}
+        <div style="margin-top: 0.75rem;">
+          <strong style="color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Error Log:</strong>
+          <pre style="background: var(--surface-subtle); border: 1px solid var(--border-color); padding: 0.5rem; font-size: 0.75rem; border-radius: var(--radius-sm); overflow-x: auto;">{{ report.error_log }}</pre>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Tavily External Research Sources Section -->
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">External Technical Research</h3>
+      <p class="card-subtitle">
+        Retrieved authoritative documentation and known resolutions via Tavily
+        {% if res.research and res.research.queries %}
+        &middot; <em>Query: "{{ res.research.queries[0] }}"</em>
+        {% endif %}
+      </p>
+    </div>
+    {% if res.research and res.research.status == 'completed' %}
+    <span class="status-pill">
+      <span class="status-dot active"></span> {{ res.research.sources | length }} Sources Found
+    </span>
+    {% else %}
+    <span class="status-pill">
+      <span class="status-dot"></span> External research unavailable
+    </span>
+    {% endif %}
+  </div>
+
+  {% if res.research and res.research.sources and res.research.sources | length > 0 %}
+  <div class="sources-grid">
+    {% for src in res.research.sources %}
+    <div class="source-card">
+      <div>
+        <div class="source-title">{{ src.title }}</div>
+        <div class="source-domain">{{ src.domain or 'external' }}</div>
+        <div class="source-snippet">{{ src.snippet }}</div>
+      </div>
+      <div style="margin-top: 0.5rem;">
+        <a href="{{ src.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-sm" style="width: 100%;">
+          Open Source &rarr;
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="color: var(--text-muted); font-size: 0.88rem; padding: 0.5rem 0;">
+    No external sources retrieved for this analysis. The recommendations were constructed using direct static analysis and model reasoning.
+  </p>
+  {% endif %}
+</div>
+
+<!-- Safe Agent Trace Timeline -->
+<div class="card">
+  <div class="card-header">
+    <div>
+      <h3 class="card-title">Agent Workflow Trace</h3>
+      <p class="card-subtitle">Auditable record of multi-agent execution pipeline</p>
+    </div>
+  </div>
+
+  <div class="trace-timeline">
+    {% if res.agent_trace %}
+      {% for trace in res.agent_trace %}
+      <div class="trace-item">
+        <div class="trace-agent-name">
+          {% if trace.status == 'completed' %}
+          <span style="color: var(--success); margin-right: 4px;">✓</span>
+          {% elif trace.status == 'warning' %}
+          <span style="color: var(--warning); margin-right: 4px;">●</span>
+          {% else %}
+          <span style="color: var(--danger); margin-right: 4px;">✕</span>
+          {% endif %}
+          {{ trace.agent }}
+        </div>
+        <div class="trace-summary">{{ trace.summary }}</div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="trace-item">
+        <div class="trace-agent-name">Orchestrator</div>
+        <div class="trace-summary">Triage completed and saved to database.</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  // Bind Export Buttons
+  document.addEventListener('DOMContentLoaded', () => {
+    const rawReportData = {{ report.result_json | safe }};
+
+    const exportJsonBtn = document.getElementById('export-json-btn');
+    if (exportJsonBtn) {
+      exportJsonBtn.addEventListener('click', () => {
+        const reportId = rawReportData.id || {{ report.id }};
+        UI.downloadJSON(rawReportData, `buglens-report-${reportId}.json`);
+      });
+    }
+
+    const exportReportBtn = document.getElementById('export-report-btn');
+    if (exportReportBtn) {
+      exportReportBtn.addEventListener('click', () => {
+        UI.printReport();
+      });
+    }
+  });
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}About — BugLens{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <h2 style="font-size: 1.85rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.02em; margin-bottom: 0.5rem;">
+      About BugLens
+    </h2>
+    <p style="font-size: 1rem; color: var(--text-muted); max-width: 600px; margin: 0 auto;">
+      An intelligent software defect triage and diagnosis system powered by an autonomous, multi-stage Agentic AI architecture.
+    </p>
+  </div>
+
+  <!-- Why Agentic AI Card -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">💡 Why Agentic AI instead of a Basic Chatbot?</h3>
+    </div>
+    <div style="font-size: 0.92rem; color: var(--text-secondary); line-height: 1.6;">
+      <p style="margin-bottom: 0.75rem;">
+        Standard conversational chatbots attempt to triage a complex software crash in a single monolithic generation. This frequently causes hallucinated root causes, missed telemetry details, and unfocused advice.
+      </p>
+      <p>
+        <strong>BugLens utilizes an Agentic Pipeline</strong> where 6 specialized agents execute in sequence with discrete responsibilities, explicit intermediate representations, and cross-verification.
+      </p>
+    </div>
+  </div>
+
+  <!-- Pure HTML/CSS Visual Agent Workflow Diagram -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">🔄 Visual Agentic Workflow</h3>
+      <span class="badge badge-category">Pure HTML/CSS Diagram</span>
+    </div>
+
+    <div class="visual-agent-pipeline">
+      <!-- Node 0: User Input -->
+      <div class="agent-node">
+        <div class="agent-node-badge">📥</div>
+        <div class="agent-node-info">
+          <h4>1. User Bug Report &amp; Telemetry</h4>
+          <p>Title, reproduction steps, expected/actual behaviors, environment, error logs, and stack traces.</p>
+        </div>
+      </div>
+
+      <div class="agent-connector">&darr;</div>
+
+      <!-- Node 1: Understanding -->
+      <div class="agent-node">
+        <div class="agent-node-badge">1</div>
+        <div class="agent-node-info">
+          <h4>Bug Understanding Agent</h4>
+          <p>Extracts concrete symptoms, technical entities (libraries, runtimes), and pinpoints missing diagnostic details.</p>
+        </div>
+      </div>
+
+      <div class="agent-connector">&darr;</div>
+
+      <!-- Node 2: Classification -->
+      <div class="agent-node">
+        <div class="agent-node-badge">2</div>
+        <div class="agent-node-info">
+          <h4>Classification Agent</h4>
+          <p>Assigns category, severity level (Critical-Low), priority (P0-P3), confidence score, and forms initial root cause hypothesis.</p>
+        </div>
+      </div>
+
+      <div class="agent-connector">&darr;</div>
+
+      <!-- Node 3: Research -->
+      <div class="agent-node">
+        <div class="agent-node-badge">3</div>
+        <div class="agent-node-info">
+          <h4>Tavily Technical Research Agent</h4>
+          <p>Constructs precision queries and queries Tavily API to fetch authoritative external docs and known issue resolutions.</p>
+        </div>
+      </div>
+
+      <div class="agent-connector">&darr;</div>
+
+      <!-- Node 4: Evidence Analysis -->
+      <div class="agent-node">
+        <div class="agent-node-badge">4</div>
+        <div class="agent-node-info">
+          <h4>Evidence Analysis Agent</h4>
+          <p>Cross-references external technical findings with user symptoms; refines the root cause without false certainty.</p>
+        </div>
+      </div>
+
+      <div class="agent-connector">&darr;</div>
+
+      <!-- Node 5: Recommendations -->
+      <div class="agent-node">
+        <div class="agent-node-badge">5</div>
+        <div class="agent-node-info">
+          <h4>Recommendation Agent</h4>
+          <p>Formulates ordered debugging steps, verification tests, and long-term architectural prevention measures.</p>
+        </div>
+      </div>
+
+      <div class="agent-connector">&darr;</div>
+
+      <!-- Node 6: Final Report -->
+      <div class="agent-node">
+        <div class="agent-node-badge">6</div>
+        <div class="agent-node-info">
+          <h4>Final Report Generator</h4>
+          <p>Consolidates all agent outputs into strict RFC-8259 JSON, records execution traces, and persists report in SQLite.</p>
+        </div>
+      </div>
+
+      <div class="agent-connector">&darr;</div>
+
+      <!-- Node 7: Output Dashboard -->
+      <div class="agent-node" style="border-color: var(--primary-border); background-color: var(--primary-subtle);">
+        <div class="agent-node-badge" style="background-color: var(--primary); color: white;">📊</div>
+        <div class="agent-node-info">
+          <h4 style="color: var(--primary);">Developer Triage Dashboard</h4>
+          <p>Interactive web inspection, printable report exporter, JSON download, and searchable persistent history.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core Technologies Grid -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+    <div class="card" style="margin-bottom: 0;">
+      <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">⚡ Groq API</h4>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+        Provides ultra-fast LLM inference using <code>llama-3.3-70b-versatile</code>. Configurable through <code>.env</code> with strict JSON response enforcement and automated retry logic.
+      </p>
+    </div>
+
+    <div class="card" style="margin-bottom: 0;">
+      <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">🌐 Tavily Search API</h4>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+        Specialized AI search engine that pulls live technical documentation and GitHub resolutions. Gracefully falls back if keys are unavailable.
+      </p>
+    </div>
+
+    <div class="card" style="margin-bottom: 0;">
+      <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">🛠️ Python Flask &amp; SQLite</h4>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+        Lightweight, dependable backend with parameterized SQL queries, thread-safe database connection pooling, and RESTful API endpoints.
+      </p>
+    </div>
+
+    <div class="card" style="margin-bottom: 0;">
+      <h4 style="font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem;">🎨 Vanilla HTML5/CSS3/JS</h4>
+      <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5;">
+        Zero heavy frontend dependencies (no React, Bootstrap, or Tailwind). Ultra-fast load times, semantic HTML, and developer-tool design language.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

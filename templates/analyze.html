@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}New Analysis — BugLens{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+  <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary);">Submit Bug Report for Triage</h2>
+  <p style="font-size: 0.88rem; color: var(--text-muted);">Provide defect telemetry. The multi-agent pipeline will classify category, severity, research technical context, and generate debugging recommendations.</p>
+</div>
+
+<!-- Two-Column Layout -->
+<div class="two-column-grid" style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.5rem; align-items: start;">
+
+  <!-- Left Column: Bug Report Form -->
+  <div class="card">
+    <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem;">
+      <div>
+        <h3 class="card-title">Defect Information</h3>
+        <p class="card-subtitle">Fill in the incident details or load an example</p>
+      </div>
+
+      <!-- Load Example Controls -->
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <select id="sample-bug-select" class="form-control" style="font-size: 0.82rem; padding: 0.35rem 0.6rem; max-width: 220px;" aria-label="Select Example Bug">
+          <option value="">Loading examples...</option>
+        </select>
+        <button id="load-sample-btn" type="button" class="btn btn-secondary btn-sm" title="Pre-fill form with chosen example">
+          Load Example
+        </button>
+      </div>
+    </div>
+
+    <form id="bug-report-form">
+      <div class="form-group">
+        <label for="bug-title" class="form-label">Bug Title <span class="required">*</span></label>
+        <input type="text" id="bug-title" class="form-control" placeholder="e.g. Flask API returns database locked error under concurrent requests" required>
+        <p class="form-hint">A concise summary of the failure or symptom.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="bug-description" class="form-label">Bug Description <span class="required">*</span></label>
+        <textarea id="bug-description" class="form-control" rows="3" placeholder="Provide background on the incident, impact on users, and context..." required></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="bug-expected" class="form-label">Expected Behavior <span class="required">*</span></label>
+          <textarea id="bug-expected" class="form-control" rows="2" placeholder="What was supposed to happen..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="bug-actual" class="form-label">Actual Behavior <span class="required">*</span></label>
+          <textarea id="bug-actual" class="form-control" rows="2" placeholder="What actually happened or failed..." required></textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="bug-steps" class="form-label">Steps to Reproduce <span class="required">*</span></label>
+        <textarea id="bug-steps" class="form-control" rows="3" placeholder="1. Start service&#10;2. Send concurrent POST requests to /endpoint&#10;3. Observe 500 status code..." required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="bug-environment" class="form-label">Environment <span class="required">*</span></label>
+        <input type="text" id="bug-environment" class="form-control" placeholder="e.g. Windows 11, Python 3.11, Flask 3.0, SQLite, Gunicorn 4 workers" required>
+        <p class="form-hint">Operating system, runtime versions, browser, database, or device.</p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="bug-component" class="form-label">Suspected Component / Module <span style="font-weight: normal; color: var(--text-muted);">(Optional)</span></label>
+          <input type="text" id="bug-component" class="form-control" placeholder="e.g. Database / Appointment Service">
+        </div>
+        <div class="form-group">
+          <label for="bug-labels" class="form-label">Existing Labels / Tags <span style="font-weight: normal; color: var(--text-muted);">(Optional)</span></label>
+          <input type="text" id="bug-labels" class="form-control" placeholder="e.g. backend, database, p1">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="bug-error-log" class="form-label">Error Log <span style="font-weight: normal; color: var(--text-muted);">(Optional)</span></label>
+        <textarea id="bug-error-log" class="form-control code-font" rows="3" placeholder="Paste server log excerpts, HTTP status lines, or console warnings..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="bug-stack-trace" class="form-label">Stack Trace <span style="font-weight: normal; color: var(--text-muted);">(Optional)</span></label>
+        <textarea id="bug-stack-trace" class="form-control code-font" rows="3" placeholder="Traceback (most recent call last):&#10;  File 'app.py', line 42..."></textarea>
+      </div>
+
+      <div style="margin-top: 1.5rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+        <button type="reset" class="btn btn-secondary">Clear Form</button>
+        <button id="analyze-btn" type="submit" class="btn btn-primary" style="min-width: 200px;">
+          ⚡ Analyze Bug with Agents
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Right Column: Pipeline Stepper & Architecture Info -->
+  <div>
+    <!-- Dynamic Stepper (Active during analysis) -->
+    <div id="pipeline-tracker-card" class="card" style="display: none; border-color: var(--primary-border); background-color: var(--surface-color);">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title" style="color: var(--primary);">Analyzing Bug Report</h3>
+          <p class="card-subtitle">Active multi-agent pipeline execution</p>
+        </div>
+      </div>
+
+      <div class="pipeline-stepper">
+        <div id="step-validation" class="pipeline-step">
+          <div class="step-indicator">○</div>
+          <div class="step-content">
+            <div class="step-title">Input Validation</div>
+            <div class="step-desc">Checking report completeness &amp; required telemetry</div>
+          </div>
+        </div>
+
+        <div id="step-understanding" class="pipeline-step">
+          <div class="step-indicator">○</div>
+          <div class="step-content">
+            <div class="step-title">Bug Understanding Agent</div>
+            <div class="step-desc">Extracting symptoms, entities &amp; missing details</div>
+          </div>
+        </div>
+
+        <div id="step-classification" class="pipeline-step">
+          <div class="step-indicator">○</div>
+          <div class="step-content">
+            <div class="step-title">Classification Agent</div>
+            <div class="step-desc">Assigning Category, Severity, Priority &amp; Root Cause</div>
+          </div>
+        </div>
+
+        <div id="step-research" class="pipeline-step">
+          <div class="step-indicator">○</div>
+          <div class="step-content">
+            <div class="step-title">Tavily Research Agent</div>
+            <div class="step-desc">Querying external documentation &amp; technical references</div>
+          </div>
+        </div>
+
+        <div id="step-evidence" class="pipeline-step">
+          <div class="step-indicator">○</div>
+          <div class="step-content">
+            <div class="step-title">Evidence Analysis Agent</div>
+            <div class="step-desc">Synthesizing bug facts against retrieved technical knowledge</div>
+          </div>
+        </div>
+
+        <div id="step-recommendations" class="pipeline-step">
+          <div class="step-indicator">○</div>
+          <div class="step-content">
+            <div class="step-title">Recommendation Agent</div>
+            <div class="step-desc">Formulating prioritized debugging &amp; testing procedures</div>
+          </div>
+        </div>
+
+        <div id="step-report" class="pipeline-step">
+          <div class="step-indicator">○</div>
+          <div class="step-content">
+            <div class="step-title">Final Report Generator</div>
+            <div class="step-desc">Validating schema &amp; recording analysis to SQLite</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent Architecture Explainer -->
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">How the Pipeline Works</h3>
+      </div>
+
+      <div style="font-size: 0.88rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <strong style="color: var(--text-primary); display: block; margin-bottom: 0.2rem;">1. Specialized Agents, Not a Chatbot</strong>
+          <p>Rather than a single prompt, BugLens breaks triage into 6 dedicated agents: extraction, classification, search, evidence evaluation, recommendations, and report compilation.</p>
+        </div>
+
+        <div>
+          <strong style="color: var(--text-primary); display: block; margin-bottom: 0.2rem;">2. Groq LLM Reasoning</strong>
+          <p>Groq powers the reasoning layers using fast inference models with strict schema enforcement to eliminate hallucinations and output structured JSON.</p>
+        </div>
+
+        <div>
+          <strong style="color: var(--text-primary); display: block; margin-bottom: 0.2rem;">3. Tavily Technical Research</strong>
+          <p>Tavily constructs focused queries to fetch authoritative technical documentation (e.g. SQLite WAL guides, MDN specs, GitHub issues) without manual search effort.</p>
+        </div>
+
+        <div>
+          <strong style="color: var(--text-primary); display: block; margin-bottom: 0.2rem;">4. Grounded Recommendations</strong>
+          <p>The system never claims guaranteed fixes. It generates ordered, non-invasive investigation steps with explicit testing and prevention guidelines.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/analysis.js"></script>
+{% endblock %}
