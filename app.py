@@ -104,8 +104,11 @@ def create_app(test_config=None) -> Flask:
     return app
 
 
+# Module-level instance for WSGI servers like Gunicorn
+app = create_app()
+
 if __name__ == "__main__":
-    app = create_app()
     port = int(os.getenv("PORT", 5000))
-    logger.info("Starting BugLens on http://127.0.0.1:%d", port)
-    app.run(host="127.0.0.1", port=port, debug=True)
+    host = os.getenv("HOST", "0.0.0.0")
+    logger.info("Starting BugLens on http://%s:%d", host, port)
+    app.run(host=host, port=port, debug=False)
